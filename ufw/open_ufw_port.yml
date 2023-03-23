@@ -1,0 +1,13 @@
+---
+- name: Open port
+  hosts: all
+  become: yes
+  tasks:
+    - name: Open port
+      community.general.ufw:
+        rule: "{{ rule | default('allow') }}"
+        port: "{{ port }}"
+        state: enabled
+        comment: "{{ comment | default('Port opened by Ansible') }}"
+        name: "{{ name | default(omit) }}"
+        proto: "{{ proto | default('tcp') }}"

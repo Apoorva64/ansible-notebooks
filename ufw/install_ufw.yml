@@ -1,0 +1,58 @@
+---
+- name: Set up UFW
+  hosts: all
+  become: yes
+  tasks:
+    - name: Accept all incoming iptables
+      command: sudo iptables -P INPUT ACCEPT
+
+    - name: Accept all outgoing iptables
+      command: sudo iptables -P OUTPUT ACCEPT
+
+    - name: Accept all forwarding iptables
+      command: sudo iptables -P FORWARD ACCEPT
+
+    - name: flush nat iptables
+      command: sudo iptables -t nat -F
+
+    - name: flush mangle iptables
+      command: sudo iptables -t mangle -F
+
+    - name: flush F
+      command: sudo iptables -F
+
+    - name: flush X
+      command: sudo iptables -X
+
+    - name: save iptables
+      command: sudo iptables-save
+
+
+    - name: Install UFW firewall
+      apt: name=ufw update_cache=yes state=latest
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+
+    - name: Set logging
+      community.general.ufw:
+        logging: 'on'
+
+    # Sometimes it is desirable to let the sender know when traffic is
+    # being denied, rather than simply ignoring it. In these cases, use
+    # reject instead of deny. In addition, log rejected connections:
+    - community.general.ufw:
+        rule: reject
+        port: auth
+        log: true
+
+    # ufw supports connection rate limiting, which is useful for protecting
+    # against brute-force login attacks. ufw will deny connections if an IP
+    # address has attempted to initiate 6 or more connections in the last
+    # 30 seconds. See  http://www.debian-administration.org/articles/187
+    # for details. Typical usage is:
+    - community.general.ufw:
+        rule: limit
+        port: ssh
+        proto: tcp
